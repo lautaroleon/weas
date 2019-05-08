@@ -1,0 +1,161 @@
+#include "foto.h"
+
+
+foto::foto(){
+ocupado=false;
+_stopcamara=false;
+}
+
+void foto::stopcamara(){
+
+_stopcamara=true;
+
+}
+
+foto::~foto(){
+
+
+
+}
+
+
+
+void foto::run(){
+
+
+CvCapture * cap = cvCaptureFromCAM(CV_CAP_ANY);
+string ruta="/home/lautaro/Escritorio/fotos/";
+string nombrefoto;
+ if(cap == NULL)
+ {
+ cout << "PROBLEMAS CON EL DISPOSITIVO " << endl;
+ }
+ else{
+ 	cout << "Ok" << endl;
+ 	IplImage* imgDisplay;
+	IplImage* imgD2;
+	cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH, 352); 
+	cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT, 288);
+ 	while(1){
+	
+		if(_stopcamara)break;
+ 		imgDisplay = cvQueryFrame(cap);
+
+		   if(ocupado){
+
+			cout<<"entro a foto"<<endl; 
+		
+	 		usleep(10);
+
+			QString key = QDateTime::currentDateTime().toString("dd_mm_yy_hh:mm:ss.jpg" );
+			QByteArray ba = key.toLocal8Bit();
+        		const char *nombre = ba.data();
+			string ruta="/home/lautaro/Escritorio/fotos/";
+			string snombre (nombre);
+			ruta.append(snombre);		
+			
+
+			cout<<"FOTO TOMADA"<<endl;  
+			cout<<nombre<<endl;
+			cvSaveImage(ruta.c_str() ,imgDisplay);
+
+			cout<<"FOTO GUARDADA"<<endl;
+		
+			usleep(10);
+
+			ocupado=false;
+			
+		    }
+		imgD2=cvCreateImage(cvSize(450,400), imgDisplay->depth, imgDisplay->nChannels);
+		cvResize(imgDisplay,imgD2);
+ 		QImage *image = IplImage2QImage(imgD2);
+		cvReleaseImage(&imgD2);
+ 		emit newImgAvailable(image);
+ 		QThread::msleep(10);
+	}
+ }
+
+
+}
+
+
+bool foto::tomafoto(){
+
+ocupado=true;
+
+
+return(true);
+}
+
+/////////////////////////////////////////////////////////////////
+/////funcion para convertir una imgen opencv a una QImage////////
+////////////////////////////////////////////////////////////////
+
+/*QImage* foto::IplImage2QImage(const IplImage *iplImage)
+{
+    int height = iplImage->height;
+    int width = iplImage->width;
+
+    if  (iplImage->depth == IPL_DEPTH_8U && iplImage->nChannels == 3)
+    {
+      const uchar *qImageBuffer = (const uchar*)iplImage->imageData;
+      QImage *img= new QImage(qImageBuffer, width, height, QImage::Format_RGB888);
+      return img->rgbSwapped();
+    } else if  (iplImage->depth == IPL_DEPTH_8U && iplImage->nChannels == 1){
+    const uchar *qImageBuffer = (const uchar*)iplImage->imageData;
+    QImage *img=new QImage(qImageBuffer, width, height, QImage::Format_Indexed8);
+
+    QVector<QRgb> colorTable;
+    for (int i = 0; i < 256; i++){
+        colorTable.push_back(qRgb(i, i, i));
+    }
+    img->setColorTable(colorTable);
+    return img;
+    }else{
+      qWarning() << "Image cannot be converted.";
+      return QImage();
+    }
+}*/
+
+
+QImage*  foto::IplImage2QImage(IplImage *iplImg)
+    {
+    int h = iplImg->height;
+    int w = iplImg->width;
+    int channels = iplImg->nChannels;
+    QImage *qimg = new QImage(w, h, QImage::Format_ARGB32);
+    char *data = iplImg->imageData;
+
+    for (int y = 0; y < h; y++, data += iplImg->widthStep)
+    {
+    	for (int x = 0; x < w; x++)
+    	{
+    		char r, g, b, a = 0;
+    		if (channels == 1)
+    		{
+    			r = data[x * channels];
+    			g = data[x * channels];
+    			b = data[x * channels];
+    		}
+    		else if (channels == 3 || channels == 4)
+    		{
+    			r = data[x * channels + 2];
+    			g = data[x * channels + 1];
+    			b = data[x * channels];
+    		}
+
+    		if (channels == 4)
+    		{
+    			a = data[x * channels + 3];
+    			qimg->setPixel(x, y, qRgba(r, g, b, a));
+    		}
+    		else
+    		{
+    			qimg->setPixel(x, y, qRgb(r, g, b));
+    		}
+    	}
+    }
+    return qimg;
+
+}
+

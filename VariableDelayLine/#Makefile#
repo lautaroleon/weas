@@ -1,0 +1,9 @@
+
+example1: example.gcc VDL_INQNET.o
+	g++ example.o ./src/keyb.o -o test1 -lCAENDigitizer -DLINUX
+
+./src/keyb.o: ./src/keyb.c ./src/keyb.h 
+	g++ -c ./src/keyb.c -o ./src/keyb.o -DLINUX
+
+test_digitizer_1.o: test_digitizer_1.c 
+	g++ -c -I./src test_digitizer_1.c -o test_digitizer_1.o -DLINUX

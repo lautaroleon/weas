@@ -1,0 +1,50 @@
+#ifndef FOTO_H
+#define FOTO_H 
+
+
+#include <QObject>
+#include <QtCore>
+#include "keyb.h" 
+#include "cv.h" 
+#include "highgui.h" 
+#include <sys/time.h>
+#include <stdio.h>
+#include <iostream>
+#include <ctime>
+#include <QImage>
+#include <string.h>
+
+	using namespace cv;
+	using namespace std;
+
+
+class foto : public QThread
+{
+    Q_OBJECT
+  
+
+public:
+
+	void run();
+
+
+
+	explicit foto();
+	~foto();	
+	void stopcamara();
+	//QImage *IplImage2QImage(const IplImage *iplImage);
+	QImage*  IplImage2QImage(IplImage *iplImg);
+
+
+public slots:
+    
+	bool tomafoto();
+	
+signals:
+	void newImgAvailable(QImage*);
+private:
+
+	bool ocupado, _stopcamara;
+};
+
+#endif // FOTO_H
